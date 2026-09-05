@@ -1,0 +1,172 @@
+@php
+    $priceActive = (request()->filled('min_price') || request()->filled('max_price'))
+        && ($minPrice > $priceFloor || $maxPrice < $priceCeil);
+
+    $hasActiveFilters = $selectedCategories->isNotEmpty()
+        || $selectedBrands->isNotEmpty()
+        || $selectedFlags->isNotEmpty()
+        || $priceActive
+        || request('in_stock')
+        || request('on_sale')
+        || request('search');
+
+    $flagLabels = ['best_seller' => 'Best Selling', 'featured' => 'Featured', 'new_arrival' => 'New Arrival'];
+@endphp
+
+{{-- Clear all — only visible when at least one filter is active --}}
+@if ($hasActiveFilters)
+    <a href="{{ route('shop') }}"
+        class="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-red-600 hover:to-red-700">
+        <i class="fa-solid fa-xmark"></i> Clear All Filters
+    </a>
+@endif
+
+<form method="GET" action="{{ route('shop') }}" class="space-y-4">
+    @if (request('search'))
+        <input type="hidden" name="search" value="{{ request('search') }}">
+    @endif
+    @if (request('sort'))
+        <input type="hidden" name="sort" value="{{ request('sort') }}">
+    @endif
+
+    {{-- Price range — clean ghorerbazar-style, kept at the top --}}
+    <div x-data="{ open: true }" class="rounded-xl border border-brand-navy/10 bg-white p-4 shadow-sm">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between text-left">
+            <span class="relative pb-1.5 text-sm font-semibold uppercase tracking-wide text-brand-navy">
+                Price Range
+                <span class="absolute bottom-0 left-0 h-0.5 w-8 rounded-full bg-brand-orange"></span>
+            </span>
+            <i class="fa-solid w-4 text-center text-xs text-brand-navy/50" :class="open ? 'fa-minus' : 'fa-plus'"></i>
+        </button>
+        <div x-show="open" x-collapse>
+            <div class="mt-5 px-1"
+                x-data="{
+                    floor: {{ $priceFloor }},
+                    ceil: {{ $priceCeil }},
+                    min: {{ $minPrice }},
+                    max: {{ $maxPrice }},
+                    get range() { return (this.ceil - this.floor) || 1 },
+                    get leftPct() { return ((this.min - this.floor) / this.range) * 100 },
+                    get rightPct() { return 100 - ((this.max - this.floor) / this.range) * 100 },
+                    fmt(v) { return Number(v).toLocaleString() },
+                    onMin() { if (this.min > this.max) this.min = this.max },
+                    onMax() { if (this.max < this.min) this.max = this.min },
+                }">
+                <div class="mb-3 flex items-center justify-between text-sm font-semibold text-brand-navy">
+                    <span>৳ <span x-text="fmt(min)"></span></span>
+                    <span>৳ <span x-text="fmt(max)"></span></span>
+                </div>
+
+                <div class="price-range">
+                    <div class="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand-navy/10"></div>
+                    <div class="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand-orange" :style="`left:${leftPct}%; right:${rightPct}%`"></div>
+                    <input type="range" name="min_price" :min="floor" :max="ceil" step="1" x-model.number="min" @input="onMin" @change="$el.form.submit()" aria-label="Minimum price">
+                    <input type="range" name="max_price" :min="floor" :max="ceil" step="1" x-model.number="max" @input="onMax" @change="$el.form.submit()" aria-label="Maximum price">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Categories --}}
+    <div x-data="{ open: true }" class="rounded-xl border border-brand-navy/10 bg-white p-4 shadow-sm">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between text-left">
+            <span class="relative pb-1.5 text-sm font-semibold uppercase tracking-wide text-brand-navy">
+                Categories
+                <span class="absolute bottom-0 left-0 h-0.5 w-8 rounded-full bg-brand-orange"></span>
+            </span>
+            <i class="fa-solid w-4 text-center text-xs text-brand-navy/50" :class="open ? 'fa-minus' : 'fa-plus'"></i>
+        </button>
+        <div x-show="open" x-collapse>
+            <div class="mt-3 max-h-64 space-y-0.5 overflow-y-auto pr-1">
+                @foreach ($categories as $category)
+                    @include('partials.filter-option', [
+                        'name' => 'categories[]',
+                        'value' => $category->slug,
+                        'label' => $category->name,
+                        'count' => $categoryCounts[$category->slug] ?? 0,
+                        'checked' => $selectedCategories->contains($category->slug),
+                    ])
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- Brands --}}
+    @if ($brands->count())
+        <div x-data="{ open: true }" class="rounded-xl border border-brand-navy/10 bg-white p-4 shadow-sm">
+            <button type="button" @click="open = !open" class="flex w-full items-center justify-between text-left">
+                <span class="relative pb-1.5 text-sm font-semibold uppercase tracking-wide text-brand-navy">
+                    Brands
+                    <span class="absolute bottom-0 left-0 h-0.5 w-8 rounded-full bg-brand-orange"></span>
+                </span>
+                <i class="fa-solid w-4 text-center text-xs text-brand-navy/50" :class="open ? 'fa-minus' : 'fa-plus'"></i>
+            </button>
+            <div x-show="open" x-collapse>
+                <div class="mt-3 max-h-64 space-y-0.5 overflow-y-auto pr-1">
+                    @foreach ($brands as $brand)
+                        @include('partials.filter-option', [
+                            'name' => 'brands[]',
+                            'value' => $brand->slug,
+                            'label' => $brand->name,
+                            'count' => (int) $brand->products_count,
+                            'checked' => $selectedBrands->contains($brand->slug),
+                        ])
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Product flag --}}
+    <div x-data="{ open: true }" class="rounded-xl border border-brand-navy/10 bg-white p-4 shadow-sm">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between text-left">
+            <span class="relative pb-1.5 text-sm font-semibold uppercase tracking-wide text-brand-navy">
+                Product Flag
+                <span class="absolute bottom-0 left-0 h-0.5 w-8 rounded-full bg-brand-orange"></span>
+            </span>
+            <i class="fa-solid w-4 text-center text-xs text-brand-navy/50" :class="open ? 'fa-minus' : 'fa-plus'"></i>
+        </button>
+        <div x-show="open" x-collapse>
+            <div class="mt-3 space-y-0.5">
+                @foreach ($flagLabels as $flag => $label)
+                    @include('partials.filter-option', [
+                        'name' => 'flags[]',
+                        'value' => $flag,
+                        'label' => $label,
+                        'count' => $flagCounts[$flag] ?? 0,
+                        'checked' => $selectedFlags->contains($flag),
+                    ])
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- Availability --}}
+    <div x-data="{ open: true }" class="rounded-xl border border-brand-navy/10 bg-white p-4 shadow-sm">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between text-left">
+            <span class="relative pb-1.5 text-sm font-semibold uppercase tracking-wide text-brand-navy">
+                Availability
+                <span class="absolute bottom-0 left-0 h-0.5 w-8 rounded-full bg-brand-orange"></span>
+            </span>
+            <i class="fa-solid w-4 text-center text-xs text-brand-navy/50" :class="open ? 'fa-minus' : 'fa-plus'"></i>
+        </button>
+        <div x-show="open" x-collapse>
+            <div class="mt-3 space-y-0.5">
+                @include('partials.filter-option', [
+                    'name' => 'in_stock',
+                    'value' => '1',
+                    'label' => 'In Stock',
+                    'count' => $availabilityCounts['in_stock'] ?? 0,
+                    'checked' => (bool) request('in_stock'),
+                ])
+                @include('partials.filter-option', [
+                    'name' => 'on_sale',
+                    'value' => '1',
+                    'label' => 'On Sale',
+                    'count' => $availabilityCounts['on_sale'] ?? 0,
+                    'checked' => (bool) request('on_sale'),
+                ])
+            </div>
+        </div>
+    </div>
+</form>
