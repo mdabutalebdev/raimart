@@ -1,0 +1,313 @@
+Redirect checkout
+
+Copy Page
+post
+https://sandbox.piprapay.com/api/checkout/redirect
+
+Recent Requests
+Log in to see full request history
+Time	Status	User Agent	
+Make a request to see history.
+
+Body Params
+full_name
+string
+required
+User's full name.
+
+email_address
+string
+required
+User's email address.
+
+mobile_number
+string
+required
+User's mobile number.
+
+amount
+string
+required
+The payment amount.
+
+currency
+string
+required
+The payment currency. For example: BDT, USD, INR
+
+metadata
+string
+required
+Additional project-specific data in JSON format. For example: { "order_id": "1", "product_id": "1"}
+
+return_url
+string
+required
+The URL where the user will be redirected from checkout.
+
+webhook_url
+string
+required
+A backend response URL where payment information is sent when an admin initiates a "SEND WEBHOOK REQUEST" from the admin panel.
+
+Headers
+MHS-PIPRAPAY-API-KEY
+string
+required
+API Key
+
+Responses
+
+200
+
+400
+Bad Request
+
+Updated 6 months ago
+
+Validate Webhook
+Verify Payment
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+1
+curl --request POST \
+2
+     --url https://sandbox.piprapay.com/api/checkout/redirect \
+3
+     --header 'accept: application/json' \
+4
+     --header 'content-type: application/json'
+
+Try It!
+Response
+Click Try It! to start a request and see the response here! Or choose an example:
+application/json
+
+200 - OK
+
+400 - Bad Request
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Verify Payment
+
+Copy Page
+post
+https://sandbox.piprapay.com/api/verify-payment?
+
+Recent Requests
+Log in to see full request history
+Time	Status	User Agent	
+Make a request to see history.
+
+Body Params
+pp_id
+string
+required
+Transaction ID
+
+Headers
+MHS-PIPRAPAY-API-KEY
+string
+required
+API Key
+
+Responses
+
+200
+
+400
+Bad Request
+
+Updated 6 months ago
+
+Redirect checkout
+Refund Payment
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+1
+curl --request POST \
+2
+     --url https://sandbox.piprapay.com/api/verify-payment \
+3
+     --header 'accept: application/json' \
+4
+     --header 'content-type: application/json'
+
+Try It!
+Response
+Click Try It! to start a request and see the response here! Or choose an example:
+application/json
+
+200 - OK
+
+400 - Bad Request
+
+
+
+
+
+
+
+
+
+
+
+
+
+Refund Payment
+
+Copy Page
+post
+https://sandbox.piprapay.com/api/refund-payment
+
+Recent Requests
+Log in to see full request history
+Time	Status	User Agent	
+Make a request to see history.
+
+Body Params
+pp_id
+string
+required
+Headers
+MHS-PIPRAPAY-API-KEY
+string
+required
+Responses
+
+200
+
+400
+Bad Request
+
+Updated 6 months ago
+
+Verify Payment
+Webhook Guides
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+1
+curl --request POST \
+2
+     --url https://sandbox.piprapay.com/api/refund-payment \
+3
+     --header 'accept: application/json' \
+4
+     --header 'content-type: application/json'
+
+Try It!
+Response
+Click Try It! to start a request and see the response here! Or choose an example:
+application/json
+
+200 - OK
+
+400 - Bad Request
+
+
+
+
+
+
+
+Webhook Guides
+
+Copy Page
+PipraPay sends real-time updates about payment status through webhooks. Integrate this API to automatically process payments, refunds, and transaction events.
+
+Headers Info
+Header Name	Value
+Method:	POST
+Content-Type:	application/json
+Request Payload
+The webhook sends a JSON payload for each transaction. Here's a sample payload:
+
+JSON
+
+{
+  "pp_id": "349452200706799329851862826",
+  "full_name": "Rasel Islam",
+  "email_address": "robiul@gmail.com",
+  "mobile_number": "01300000000",
+  "gateway": "Bkash Personal",
+  "amount": "6",
+  "fee": "0.68",
+  "discount_amount": "0.34",
+  "total": 6.34,
+  "local_net_amount": "774.99",
+  "currency": "USD",
+  "local_currency": "BDT",
+  "metadata": {
+    "invoice_id": "518917606497522107418488315457"
+  },
+  "sender": "01300000000",
+  "transaction_id": "LSKDJCVNNVHG",
+  "status": "completed",
+  "date": "Jan 30, 2026 07:01 PM"
+}
+Handling Webhook
+Here’s a simple PHP example to handle the BillPax webhook:
+
+PHP
+
+<?php
+  $data = json_decode(file_get_contents('php://input'), true);
+
+  http_response_code(200);
+
+  if ($data) {
+      $status = $data['status'] ?? 'unknown';
+      $pp_id = $data['pp_id'] ?? null;
+
+      echo json_encode(['status' => 'ok']);
+  } else {
+      echo json_encode(['status' => 'error', 'message' => 'Invalid payload']);
+  }
+HTTP Response Code
+Code	Description
+200	Webhook received successfully
+Updated 6 months ago
+
+Refund Payment

@@ -1,0 +1,231 @@
+@import 'tailwindcss';
+@import '@fontsource/geist-sans/400.css';
+@import '@fontsource/geist-sans/500.css';
+@import '@fontsource/geist-sans/600.css';
+@import '@fontsource/geist-sans/700.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Geist', 'Geist Fallback', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: 'Geist', 'Geist Fallback', ui-sans-serif, system-ui, sans-serif;
+
+    --color-brand-bg: #F5F2F2;
+    --color-brand-navy: #011939;
+    --color-brand-navy-light: #083369;
+    --color-brand-orange: #F58502;
+}
+
+/* Hide elements until Alpine has initialised (accordions, drawers) */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Site container — matches the reference site: full width + 12px padding on
+   phones, 95% max-width + 20px padding (centred) from 640px up. Used on the
+   header, footer and every content section so the whole site lines up. */
+.gb-container {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 12px;
+}
+
+@media (min-width: 640px) {
+    .gb-container {
+        max-width: 95%;
+        padding-inline: 20px;
+    }
+}
+
+/* Product grid — 2 cols on mobile, then auto-fill fixed-width slots so cards
+   stay compact and don't stretch when only a few products exist.
+   Declared inside @layer components so Tailwind utilities such as `sm:hidden`
+   (which live in the later utilities layer) can still override its display. */
+@layer components {
+    /* Legacy alias — identical to .product-row so older markup stays in step. */
+    .product-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 640px) {
+        .product-grid {
+            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .product-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    /* ONE card size for the WHOLE site — home, shop, offers, wishlist, related.
+       Mobile: exactly 2 across. From sm up: fixed-width slots, so a card is the
+       same size no matter how wide its container is (shop has a sidebar, home
+       does not). .product-row is the grid, .product-row-track/.product-slide are
+       the carousel equivalents using the same slot width. */
+    .product-row {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .product-row-track {
+        display: flex;
+        gap: 12px;
+    }
+
+    .product-slide {
+        flex: 0 0 calc((100% - 12px) / 2);
+    }
+
+    @media (min-width: 640px) {
+        .product-row {
+            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .product-row-track { gap: 16px; }
+        .product-slide { flex: 0 0 calc((100% - 32px) / 3); }
+    }
+
+    @media (min-width: 1024px) {
+        .product-row {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+        .product-slide { flex: 0 0 calc((100% - 64px) / 5); }
+    }
+}
+
+/* Rich text coming out of the admin's Quill editor (pages, about content).
+   Tailwind's reset strips heading/list styling, so restore it here. */
+.prose-page {
+    color: rgb(15 33 68 / 0.75);
+    line-height: 1.75;
+}
+.prose-page h1,
+.prose-page h2,
+.prose-page h3,
+.prose-page h4 {
+    color: #0f2144;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-block: 1.4em 0.6em;
+}
+.prose-page h1 { font-size: 1.75rem; }
+.prose-page h2 { font-size: 1.4rem; }
+.prose-page h3 { font-size: 1.2rem; }
+.prose-page h4 { font-size: 1.05rem; }
+.prose-page > :first-child { margin-top: 0; }
+.prose-page p { margin-block: 0.85em; }
+.prose-page ul,
+.prose-page ol { margin-block: 0.85em; padding-left: 1.5rem; }
+.prose-page ul { list-style: disc; }
+.prose-page ol { list-style: decimal; }
+.prose-page li { margin-block: 0.35em; }
+.prose-page a { color: #f97316; text-decoration: underline; }
+.prose-page a:hover { color: #0f2144; }
+.prose-page strong { color: #0f2144; font-weight: 700; }
+.prose-page blockquote {
+    border-left: 3px solid #f97316;
+    padding-left: 1rem;
+    margin-block: 1em;
+    font-style: italic;
+}
+.prose-page img { max-width: 100%; height: auto; border-radius: 0.75rem; margin-block: 1em; }
+.prose-page table { width: 100%; border-collapse: collapse; margin-block: 1em; }
+.prose-page th,
+.prose-page td { border: 1px solid rgb(15 33 68 / 0.12); padding: 0.5rem 0.75rem; text-align: left; }
+
+/* While a slider is being dragged with the mouse */
+.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+    scroll-snap-type: none;
+}
+
+.is-dragging a,
+.is-dragging img {
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Dual-handle price range slider (shop filters)
+   Two range inputs are stacked on the same track; only their thumbs receive
+   pointer events so each handle can be dragged independently.
+--------------------------------------------------------------------------- */
+.price-range {
+    position: relative;
+    height: 1.25rem;
+}
+
+.price-range input[type='range'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 1.25rem;
+    margin: 0;
+    background: transparent;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.price-range input[type='range']:focus {
+    outline: none;
+}
+
+.price-range input[type='range']::-webkit-slider-runnable-track {
+    height: 1.25rem;
+    background: transparent;
+    border: none;
+}
+
+.price-range input[type='range']::-moz-range-track {
+    height: 1.25rem;
+    background: transparent;
+    border: none;
+}
+
+.price-range input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    height: 1.25rem;
+    width: 1.25rem;
+    margin-top: 0;
+    border-radius: 9999px;
+    background: var(--color-brand-orange);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.price-range input[type='range']::-moz-range-thumb {
+    pointer-events: auto;
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 9999px;
+    background: var(--color-brand-orange);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.price-range input[type='range']:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+    box-shadow: 0 2px 8px rgba(245, 133, 2, 0.45);
+}
+
+.price-range input[type='range']:active::-moz-range-thumb {
+    transform: scale(1.12);
+    box-shadow: 0 2px 8px rgba(245, 133, 2, 0.45);
+}
